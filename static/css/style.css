@@ -10,6 +10,8 @@
     --border-radius: 12px;
     --container-width: 90%;
     --max-width: 768px;
+    --header-height: 120px;
+    --footer-height: 60px;
 }
 
 * {
@@ -32,26 +34,42 @@ body {
 .app-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     width: var(--container-width);
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 2rem 0;
+    padding: 1.5rem 0;
+    overflow: hidden;
 }
 
 .header {
-    text-align: center;
-    margin-bottom: 2rem;
+    height: var(--header-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0rem;
 }
 
 .logo {
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(to right, var(--accent-primary), #9333ea);
+    background: linear-gradient(135deg, var(--accent-primary), #9333ea, #6366f1);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.5rem;
+    text-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+    animation: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+    }
+    to {
+        text-shadow: 0 0 30px rgba(124, 58, 237, 0.6);
+    }
 }
 
 .tagline {
@@ -61,17 +79,28 @@ body {
 
 .main-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .control-panel {
     background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: calc(100vh - var(--header-height) - var(--footer-height) - 3rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .input-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
 }
 
 textarea {
@@ -85,6 +114,7 @@ textarea {
     font-family: inherit;
     resize: none;
     transition: all 0.3s ease;
+    max-height: 120px;
 }
 
 textarea:focus {
@@ -94,7 +124,7 @@ textarea:focus {
 }
 
 .prompt-suggestions {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
@@ -115,18 +145,30 @@ textarea:focus {
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
 }
 
 .suggestion-chip:hover {
     background: var(--accent-primary);
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
 .status {
-    margin: 1rem 0;
-    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    padding: 0.2rem 0.5rem;
     border-radius: var(--border-radius);
-    font-size: 0.9rem;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.status.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .status.error {
@@ -147,10 +189,12 @@ textarea:focus {
 .image-container {
     position: relative;
     width: 100%;
-    aspect-ratio: 1;
+    flex: 1;
+    min-height: 0;
     border-radius: var(--border-radius);
     overflow: hidden;
     background: rgba(0, 0, 0, 0.2);
+    margin-top: 0.5rem;
 }
 
 .image-wrapper {
@@ -167,7 +211,7 @@ textarea:focus {
     height: 100%;
     object-fit: cover;
     border-radius: var(--border-radius);
-    transition: opacity 0.3s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #nextImage {
@@ -232,8 +276,11 @@ textarea:focus {
 }
 
 .footer {
-    text-align: center;
-    margin-top: 2rem;
+    height: var(--footer-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
     color: var(--text-secondary);
     font-size: 0.9rem;
 }
@@ -241,7 +288,9 @@ textarea:focus {
 /* Mobile Responsiveness */
 @media (max-width: 640px) {
     :root {
-        --container-width: 95%;
+        --container-width: 92%;
+        --header-height: 100px;
+        --footer-height: 50px;
     }
 
     .app-container {
@@ -249,7 +298,7 @@ textarea:focus {
     }
 
     .logo {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .control-panel {
@@ -258,7 +307,7 @@ textarea:focus {
 
     .prompt-suggestions {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         gap: 0.5rem;
     }
 
@@ -269,5 +318,12 @@ textarea:focus {
     .suggestion-chip {
         width: 100%;
         text-align: center;
+        padding: 0.4rem 0.75rem;
+    }
+
+    textarea {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        max-height: 100px;
     }
 } 

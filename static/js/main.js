@@ -34,22 +34,32 @@ class ImageGenerator {
     handleInput(prompt) {
         this.currentPrompt = prompt.trim();
         
-        // Clear previous timeout
         if (this.debounceTimeout) {
             clearTimeout(this.debounceTimeout);
         }
 
-        // Don't generate for empty prompts
         if (!this.currentPrompt) {
-            this.statusDiv.innerHTML = '';
-            this.statusDiv.className = 'status';
+            this.updateStatus('', '');
             return;
         }
 
-        // Set new timeout
         this.debounceTimeout = setTimeout(() => {
             this.queueGeneration(this.currentPrompt);
-        }, 800); // Increased to 800ms for better UX
+        }, 800);
+    }
+
+    updateStatus(message, type) {
+        this.statusDiv.className = `status ${type}`;
+        this.statusDiv.innerHTML = message;
+        
+        // Remove show class
+        this.statusDiv.classList.remove('show');
+        
+        // Force reflow
+        void this.statusDiv.offsetWidth;
+        
+        // Add show class to trigger animation
+        this.statusDiv.classList.add('show');
     }
 
     async queueGeneration(prompt) {
@@ -68,12 +78,11 @@ class ImageGenerator {
         }
 
         this.isGenerating = true;
-        const prompt = this.queue[this.queue.length - 1]; // Get latest prompt
-        this.queue = []; // Clear queue
+        const prompt = this.queue[this.queue.length - 1];
+        this.queue = [];
 
         try {
-            this.statusDiv.innerHTML = '<div class="spinner"></div>Creating your imagination...';
-            this.statusDiv.className = 'status loading';
+            this.updateStatus('<div class="spinner"></div>Creating your masterpiece...', 'loading');
 
             const response = await fetch('/generate', {
                 method: 'POST',
@@ -101,23 +110,21 @@ class ImageGenerator {
             if (data.images && data.images[0]) {
                 const imageData = data.images[0];
                 if (imageData.url && imageData.url.startsWith('data:image')) {
-                    // Load image in hidden next image element
                     this.nextImage.src = imageData.url;
                     this.nextImage.onload = () => {
-                        // Swap images with fade effect
                         this.currentImage.style.opacity = '0';
                         this.nextImage.style.opacity = '1';
+                        this.nextImage.style.transform = 'scale(1)';
                         
-                        // After transition, update current image
                         setTimeout(() => {
                             this.currentImage.src = this.nextImage.src;
                             this.currentImage.style.opacity = '1';
                             this.nextImage.style.opacity = '0';
-                        }, 300);
+                            this.nextImage.style.transform = 'scale(1.1)';
+                        }, 500);
                     };
                     
-                    this.statusDiv.innerHTML = '✨ Image generated successfully!';
-                    this.statusDiv.className = 'status success';
+                    this.updateStatus('✨ Your masterpiece is ready!', 'success');
                 } else {
                     throw new Error('Invalid image data format received');
                 }
@@ -126,11 +133,9 @@ class ImageGenerator {
             }
         } catch (error) {
             console.error('Error:', error);
-            this.statusDiv.innerHTML = `🚫 Error: ${error.message}`;
-            this.statusDiv.className = 'status error';
+            this.updateStatus(`🚫 Error: ${error.message}`, 'error');
         } finally {
             this.isGenerating = false;
-            // Process next item in queue if any
             if (this.queue.length > 0) {
                 this.processQueue();
             }
