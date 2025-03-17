@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pranav AI - Image Generation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo-container">
+                <h1 class="logo">Pranav AI</h1>
+                <p class="tagline">Text to Image Generation</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="control-panel">
+                <div class="input-group">
+                    <textarea 
+                        id="promptInput" 
+                        placeholder="Describe your imagination..."
+                        rows="3"
+                        autofocus
+                    ></textarea>
+                    <div class="prompt-suggestions">
+                        <span>Try: </span>
+                        <button class="suggestion-chip">a magical forest</button>
+                        <button class="suggestion-chip">cosmic nebula</button>
+                        <button class="suggestion-chip">neon cityscape</button>
+                    </div>
+                </div>
+
+                <div id="status" class="status"></div>
+
+                <div class="image-container">
+                    <div class="image-wrapper">
+                        <img id="generatedImage" alt="Your generated art will appear here" />
+                        <img id="nextImage" alt="Next image" />
+                    </div>
+                    <div class="image-overlay">
+                        <div class="pulse-effect"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Created with 💫 by Pranav</p>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

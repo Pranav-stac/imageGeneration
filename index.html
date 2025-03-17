@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chroma Controller</title>
+    <style>
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+        .iframe-container {
+            width: 500px;
+            height: 325px;
+            overflow: hidden;
+            position: relative;
+        }
+        iframe {
+            width: 280px;
+            height: 800px;
+            border: none;
+            position: relative;
+            top: -100px;
+            pointer-events: auto;
+        }
+        .control-panel {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 400px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0051b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .loading {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        #generatedImage {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 8px;
+            display: none;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1565c0;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to {transform: rotate(360deg);}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="control-panel">
+            <textarea id="promptInput" placeholder="Enter your prompt here"></textarea>
+            <button onclick="generateImage()">Generate Image</button>
+            <div id="status"></div>
+            <img id="generatedImage" alt="Generated image will appear here" />
+        </div>
+    </div>
+
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('promptInput').value;
+            const statusDiv = document.getElementById('status');
+            const button = document.querySelector('button');
+            const imageElement = document.getElementById('generatedImage');
+            
+            try {
+                button.disabled = true;
+                statusDiv.innerHTML = '<div class="spinner"></div>Initializing image generation...';
+                statusDiv.className = 'loading';
+                imageElement.style.display = 'none';
+                
+                console.log('Sending request with prompt:', prompt);
+                
+                const response = await fetch('http://127.0.0.1:5000/api/fal/proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        negative_prompt: "face, ugly, deformed"
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Handle the image data from the response
+                if (data.images && data.images[0]) {
+                    const imageData = data.images[0];
+                    if (imageData.url && imageData.url.startsWith('data:image')) {
+                        console.log('Setting base64 image data');
+                        imageElement.src = imageData.url;
+                        imageElement.style.display = 'block';
+                        statusDiv.innerHTML = 'Image generated successfully!';
+                        statusDiv.className = 'success';
+                    } else {
+                        console.error('Invalid image data format:', imageData);
+                        throw new Error('Invalid image data format received');
+                    }
+                } else {
+                    console.error('No image data in response:', data);
+                    throw new Error('No image data received in the response');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = `Error: ${error.message}`;
+                statusDiv.className = 'error';
+                imageElement.style.display = 'none';
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
