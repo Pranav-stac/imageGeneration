@@ -38,7 +38,7 @@ body {
     width: var(--container-width);
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 1.5rem 0;
+    padding: 0;
     overflow: hidden;
 }
 
@@ -48,7 +48,8 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 0rem;
+    margin-bottom: 0.5rem;
+    padding-top: 0.5rem;
 }
 
 .logo {
@@ -289,12 +290,16 @@ textarea:focus {
 @media (max-width: 640px) {
     :root {
         --container-width: 92%;
-        --header-height: 100px;
+        --header-height: 90px;
         --footer-height: 50px;
     }
 
     .app-container {
-        padding: 1rem 0;
+        padding: 0;
+    }
+
+    .header {
+        padding-top: 0.25rem;
     }
 
     .logo {
