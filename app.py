@@ -3,9 +3,18 @@ from flask_cors import CORS
 import requests
 import json
 import time
+import os
+from dotenv import load_dotenv
+import threading
+from datetime import datetime
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Store the last activity timestamp
+last_activity = datetime.now()
 
 def get_result(request_id):
     """Get the result directly using the request ID."""
@@ -74,8 +83,21 @@ def poll_result(request_id, max_retries=30, delay=1):
 def index():
     return render_template('index.html')
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    global last_activity
+    last_activity = datetime.now()
+    return jsonify({
+        "status": "healthy",
+        "last_activity": last_activity.isoformat()
+    })
+
 @app.route('/generate', methods=['POST'])
 def generate():
+    global last_activity
+    last_activity = datetime.now()
+    
     try:
         data = request.json
         print("Received request data:", json.dumps(data, indent=2))
@@ -130,5 +152,25 @@ def generate():
         print(f"Unexpected error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+def ping_service():
+    """Background task to ping the service periodically"""
+    while True:
+        try:
+            # Get the service URL from environment or use a default
+            service_url = os.getenv('SERVICE_URL', 'https://pranavai.onrender.com')
+            response = requests.get(f"{service_url}/health")
+            print(f"Health check response: {response.status_code}")
+            time.sleep(300)  # Ping every 5 minutes
+        except Exception as e:
+            print(f"Error in health check: {e}")
+            time.sleep(300)  # Wait before retrying
+
+def start_background_task():
+    """Start the background ping task"""
+    thread = threading.Thread(target=ping_service, daemon=True)
+    thread.start()
+
+# Start the background task when the app starts
+start_background_task()
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
