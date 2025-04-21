@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
 import requests
 import json
@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 import threading
 from datetime import datetime
+import io
 
 load_dotenv()
 
@@ -150,6 +151,53 @@ def generate():
             
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/generate-image', methods=['GET'])
+def generate_image():
+    global last_activity
+    last_activity = datetime.now()
+    
+    try:
+        # Get the prompt text from query parameter
+        text = request.args.get('text', '')
+        if not text:
+            return jsonify({'error': 'No text prompt provided'}), 400
+            
+        # Create request to the new service
+        url = f'https://fast-flux-demo.replicate.workers.dev/api/generate-image'
+        headers = {
+            'Sec-Ch-Ua-Platform': 'Windows',
+            'Accept-Language': 'en-GB,en;q=0.9',
+            'Sec-Ch-Ua': '"Not:A-Brand";v="24", "Chromium";v="134"',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Dest': 'image',
+            'Referer': 'https://fast-flux-demo.replicate.workers.dev/',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Priority': 'i'
+        }
+        
+        params = {'text': text}
+        
+        # Make the request and stream the response directly
+        response = requests.get(url, headers=headers, params=params, stream=True)
+        
+        if response.status_code != 200:
+            return jsonify({'error': f'Image generation failed with status {response.status_code}'}), response.status_code
+            
+        # Return the image directly to the client
+        return send_file(
+            io.BytesIO(response.content),
+            mimetype=response.headers.get('Content-Type', 'image/jpeg'),
+            as_attachment=False
+        )
+            
+    except Exception as e:
+        print(f"Error generating image: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def ping_service():
